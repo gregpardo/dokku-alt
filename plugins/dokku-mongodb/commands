@@ -171,6 +171,21 @@ EOF
         bash -c "mongodump --username \"$DB_USER\" --password \"$DB_PASSWORD\" --host \"$DB_HOST\" --port \"$DB_PORT\" --db \"$DB_NAME\" --collection \"$4\" --out -"
     ;;
 
+  mongodb:restore)
+    verify_app_name "$2"
+    verify_db_name "$3"
+    verify_max_args 4 "$@"
+
+    if ! db_info "$APP" "$DB_NAME"; then
+        fail "$DB_NAME: database is not linked to $APP"
+    fi
+
+    docker run -i --rm \
+            --link="$DB_CONTAINER":"$DB_CONTAINER_LINK" \
+            "$DB_IMAGE" \
+        bash -c "mongorestore --username \"$DB_USER\" --password \"$DB_PASSWORD\" --host \"$DB_HOST\" --port \"$DB_PORT\" --db \"$DB_NAME\" \"$4\" --out -"
+    ;;
+
   help)
     cat && cat<<EOF
     mongodb:create <db>         Create a MongoDB database
@@ -183,6 +198,7 @@ EOF
     mongodb:import <app> <db> <collection>    Import database collection for an app
     mongodb:export <app> <db> <collection>    Export database collection for an app
     mongodb:dump <app> <db> <collection>      Dump database collection in bson for an app
+    mongodb:restore <app> <db> <collection>   Restore database collection in bson for an app
 EOF
     ;;
 
